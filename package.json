@@ -1,4 +1,13 @@
 {
+  "name": "trustscholar",
+  "version": "1.0.0",
+  "description": "Scholarship Application and Verification System",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "install-all": "cd backend && npm install && cd ../frontend && npm install"
+  },
   "dependencies": {
     "mongoose": "^9.1.5"
   }
