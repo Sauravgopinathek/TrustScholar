@@ -94,25 +94,25 @@ npm start
 
 ## 🔐 Security Features Implemented
 
-### 1. Authentication (3 marks)
-- **Single-Factor Authentication (1.5m)**: Email/Password login with strong password requirements
-- **Multi-Factor Authentication (1.5m)**: Password + Email OTP verification
+### 1. Authentication
+- **Single-Factor Authentication**: Email/Password login with strong password requirements
+- **Multi-Factor Authentication**: Password + Email OTP verification
 
-### 2. Authorization - Access Control (3 marks)
+### 2. Authorization - Access Control
 - **Access Control Matrix/ACL** with 3 subjects (Student, Verifier, Admin) and 3+ objects
 - **Policy Definition**: Role-based permissions clearly defined
 - **Implementation**: Middleware-based access control enforcement
 
-### 3. Encryption (3 marks)
-- **Key Exchange Mechanism (1.5m)**: RSA-2048 key generation and exchange
-- **Encryption/Decryption (1.5m)**: AES-256-CBC for sensitive data, Hybrid RSA+AES approach
+### 3. Encryption
+- **Key Exchange Mechanism**: RSA-2048 key generation and exchange
+- **Encryption/Decryption**: AES-256-CBC for sensitive data, Hybrid RSA+AES approach
 
-### 4. Hashing & Digital Signature (3 marks)
-- **Hashing with Salt (1.5m)**: bcrypt for passwords, SHA-512 for document integrity
-- **Digital Signature (1.5m)**: RSA-SHA512 signatures for application authenticity
+### 4. Hashing & Digital Signature
+- **Hashing with Salt**: bcrypt for passwords, SHA-512 for document integrity
+- **Digital Signature**: RSA-SHA512 signatures for application authenticity
 
-### 5. Encoding Techniques (3 marks)
-- **Encoding Implementation (1m)**: Base64 for documents, QR codes for verification
+### 5. Encoding Techniques
+- **Encoding Implementation**: Base64 for documents, QR codes for verification
 - **Security Levels & Risks**: Documented in code
 - **Possible Attacks**: Rate limiting, input validation, XSS protection
 
