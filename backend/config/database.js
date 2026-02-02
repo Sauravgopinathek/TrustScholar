@@ -1,17 +1,19 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://TrustScholar_db:<bqtwv1t6G6f9Tyaj>@cluster1.ocdwr2d.mongodb.net/?appName=Cluster1';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/scholarship_db';
+const isLocalMongoDB = MONGODB_URI.includes('localhost') || MONGODB_URI.includes('127.0.0.1');
 
-// MongoDB connection options
 const options = {
     maxPoolSize: 10,
     minPoolSize: 2,
     socketTimeoutMS: 45000,
     serverSelectionTimeoutMS: 10000,
     family: 4,
-    tls: true,
-    tlsAllowInvalidCertificates: false
+    ...(isLocalMongoDB ? {} : {
+        tls: true,
+        tlsAllowInvalidCertificates: false
+    })
 };
 
 // Connect to MongoDB
