@@ -75,17 +75,14 @@ REACT_APP_GOOGLE_CLIENT_ID=your_google_client_id
 **Terminal 1 - Backend:**
 ```bash
 cd backend
-npm start
-```
-Or with auto-reload:
-```bash
 npm run dev
 ```
 
 **Terminal 2 - Frontend:**
 ```bash
 cd frontend
-npm start
+npm run build
+npx serve -s build
 ```
 
 ### 4. Access the Application
@@ -183,10 +180,6 @@ npm install
 
 4. Start the backend:
 ```bash
-npm start
-```
-Or with auto-reload for development:
-```bash
 npm run dev
 ```
 
@@ -204,9 +197,10 @@ npm install
 
 3. Configure environment variables in `.env` file
 
-4. Start the development server:
+4. Start the application:
 ```bash
-npm start
+npm run build
+npx serve -s build
 ```
 
 5. Build for production:

@@ -66,7 +66,7 @@ app.use('/api/', limiter);
 // Stricter rate limit for auth endpoints
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 10, // 10 attempts per 15 minutes
+    max: 100, // Increased for development: 100 attempts per 15 minutes
     message: {
         success: false,
         message: 'Too many authentication attempts, please try again later.'
@@ -125,10 +125,10 @@ app.use((req, res) => {
 // Global error handler
 app.use((err, req, res, next) => {
     console.error('Server error:', err);
-    
+
     // Don't leak error details in production
-    const message = process.env.NODE_ENV === 'production' 
-        ? 'Internal server error' 
+    const message = process.env.NODE_ENV === 'production'
+        ? 'Internal server error'
         : err.message;
 
     res.status(err.status || 500).json({
@@ -146,7 +146,7 @@ const startServer = async () => {
         // Connect to MongoDB
         console.log('🔄 Connecting to MongoDB...');
         await connectDB();
-        
+
         // Test connection
         const connected = await testConnection();
         if (!connected) {
