@@ -13,6 +13,7 @@ A secure web application for managing scholarship applications with comprehensiv
 | Encryption | AES-256-CBC, RSA-2048 |
 | Hashing | bcrypt, SHA-512 |
 | Digital Signatures | RSA-SHA512 |
+| Verification | 16-Character Secure Codes |
 
 ## 🚀 Quick Start
 
@@ -109,7 +110,7 @@ npx serve -s build
 - **Digital Signature**: RSA-SHA512 signatures for application authenticity
 
 ### 5. Encoding Techniques
-- **Encoding Implementation**: Base64 for documents, QR codes for verification
+- **Encoding Implementation**: Base64 for documents, Secure Hex Codes for verification
 - **Security Levels & Risks**: Documented in code
 - **Possible Attacks**: Rate limiting, input validation, XSS protection
 
@@ -239,7 +240,7 @@ npm run build
 - Submit applications with RSA-SHA512 digital signature
 - Upload encrypted documents (AES-256-CBC)
 - Track application status
-- Download certificate with QR code verification
+- View/Download Verified Certificate with Secure Code
 
 ### Officer (Verifier)
 - Review submitted applications
@@ -263,7 +264,7 @@ npm run build
 4. **Browse** and apply for scholarships
 5. **Upload documents** (encrypted with AES-256-CBC, hashed with SHA-512)
 6. **Submit application** (digitally signed with RSA-SHA512)
-7. **Scan QR code** on certificate to verify authenticity
+7. **Verify Authenticity** (Enter secure code on public verification page/dashboard)
 
 ## 📊 Database Collections (MongoDB)
 
