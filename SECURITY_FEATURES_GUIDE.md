@@ -260,7 +260,7 @@ await app.save();
 
 ---
 
-### 6. ✅ Encoding - Base64 + QR Code
+### 6. ✅ Encoding - Base64 + Secure Verification Codes
 
 **Location:** [backend/utils/encoding.js](backend/utils/encoding.js)
 
@@ -280,25 +280,38 @@ const decodeBase64 = (base64String) => {
 const fileBase64 = encodeBase64(req.file.buffer.toString('binary'));
 ```
 
-**QR Code Generation:**
+**Secure Verification Code Generation:**
 ```javascript
-const QRCode = require('qrcode');
+const crypto = require('crypto');
 
-// Generate QR code for application verification
-const generateVerificationQR = async (applicationNumber) => {
-    const verificationUrl = `${process.env.FRONTEND_URL}/verify/${applicationNumber}`;
-    const qrDataUrl = await QRCode.toDataURL(verificationUrl, {
-        errorCorrectionLevel: 'H',
-        width: 200
-    });
-    return qrDataUrl;
+// Generate verification code string for application
+// Contains: Application ID, timestamp, verification hash
+const generateVerificationCodeString = (applicationData) => {
+    // Create verification payload
+    const timestamp = Date.now();
+    const payload = {
+        applicationId: applicationData.id,
+        applicationNumber: applicationData.application_number,
+        studentId: applicationData.student_id,
+        timestamp: timestamp
+    };
+
+    // Create verification hash (SHA-512)
+    const verificationHash = crypto
+        .createHash('sha512')
+        .update(JSON.stringify(payload))
+        .digest('hex')
+        .substring(0, 16);
+
+    // Format: SVS-APP2026-HASH
+    return `SVS-${applicationData.applicationNumber}-${verificationHash}`;
 };
 ```
 
 **Demo:**
 - Upload document → Converted to Base64
-- Submit application → QR code generated for verification
-- Scan QR → Opens verification page with application details
+- Approve application → Secure Verification Code generated
+- Public Verification → Enter code at `/verify-certificate` to validate authenticity
 
 ---
 
@@ -380,7 +393,7 @@ npx serve -s build
    - Upload documents (Base64 + AES-256-CBC encryption)
    - SHA-512 hash generated for file integrity
    - Submit → RSA-SHA512 digitally signed
-   - QR code generated for verification
+   - Secure code pending approval
 
 3. **Admin Review** (Authorization Matrix)
    - Login as admin
@@ -389,9 +402,10 @@ npx serve -s build
    - Approve/reject applications
    - View security audit logs
 
-4. **Verify Application** (QR Code Scanning)
-   - Scan QR code on certificate
-   - View verified application details
+4. **Verify Application** (Secure Code Verification)
+   - Go to `/verify-certificate` (Public Access)
+   - Enter Verification Code (e.g., SVS-APP2026-...)
+   - View verified authentic details
    - Digital signature verification displayed
 
 ---
@@ -427,11 +441,11 @@ npx serve -s build
 - Code snippet: RSA-SHA512 sign & verify
 - Demo: Tampering detection
 
-**6. Encoding**
+**6. Encoding & Authenticity**
 - Screenshot: Base64 encoded document
-- QR code for application verification
-- Code snippet: Encode/decode functions
-- Show: Original vs encoded format
+- Screenshot: Secure Verification Code on Certificate
+- Code snippet: Code generation logic
+- Explain: Difference between Integrity (Hash) and Authenticity (Code)
 
 ---
 
@@ -483,7 +497,7 @@ npx serve -s build
 | `backend/routes/auth.js` | MFA, Password Hashing |
 | `backend/middleware/authorization.js` | ACL, RBAC, Audit Logging |
 | `backend/utils/encryption.js` | AES-256, RSA-2048, SHA-512, Digital Signatures |
-| `backend/utils/encoding.js` | Base64, QR Code Generation |
+| `backend/utils/encoding.js` | Base64, Verification Code Generation |
 | `backend/models/User.js` | User schema with encrypted keys |
 | `backend/models/Document.js` | Document schema with hash & signature |
 | `backend/routes/documents.js` | File encryption & upload |
@@ -504,7 +518,7 @@ All 6 security requirements implemented following NIST SP 800-63-2 guidelines:
 | 3 | Encryption | AES-256-CBC + RSA-2048 Hybrid |
 | 4 | Hashing | bcrypt (passwords) + SHA-512 (documents) |
 | 5 | Digital Signatures | RSA-SHA512 for application authenticity |
-| 6 | Encoding | Base64 + QR Code verification |
+| 6 | Encoding | Base64 + Secure Verification Codes |
 
 **Additional Security Features:**
 - Helmet.js security headers
