@@ -352,11 +352,12 @@ npm install
 ```powershell
 # Terminal 1: Backend
 cd backend
-node server.js
+npm run dev
 
 # Terminal 2: Frontend
 cd frontend
-npm start
+npm run build
+npx serve -s build
 ```
 
 ### Step 4: Access Application

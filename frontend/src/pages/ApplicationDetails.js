@@ -3,9 +3,9 @@ import { useParams } from 'react-router-dom';
 import { applicationsAPI, documentsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import { 
-  FiCheckCircle, FiXCircle, FiClock, FiShield, FiFileText, 
-  FiDownload, FiAlertCircle, FiUser, FiCalendar 
+import {
+  FiCheckCircle, FiXCircle, FiClock, FiShield, FiFileText,
+  FiDownload, FiAlertCircle, FiUser, FiCalendar
 } from 'react-icons/fi';
 
 const ApplicationDetails = () => {
@@ -134,19 +134,23 @@ const ApplicationDetails = () => {
         </div>
       </div>
 
-      {user?.role === 'student' && application.verified_qr_code && application.status === 'verified' && (
+      {['student', 'officer', 'admin'].includes(user?.role) && application.verified_verification_code && ['verified', 'approved'].includes(application.status) && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-lg flex items-center justify-center">
               <FiShield className="w-4 h-4 text-white" />
             </div>
-            Verified Certificate QR
+            Verified Certificate Code
           </h2>
           <div className="text-center">
-            <div className="inline-block p-4 bg-white border-2 border-emerald-200 rounded-xl shadow-md">
-              <img src={application.verified_qr_code} alt="Verified QR" className="w-[150px] h-[150px]" />
+            <div className="inline-block p-4 bg-slate-50 border-2 border-emerald-200 rounded-xl shadow-md">
+              <code className="text-lg font-mono font-bold text-emerald-800 select-all">
+                {application.verified_verification_code}
+              </code>
             </div>
-            <p className="text-sm text-gray-500 mt-2">Scan to download verified certificate</p>
+            <p className="text-sm text-gray-500 mt-3">
+              Use this code to verify your scholarship authenticity.
+            </p>
           </div>
         </div>
       )}
@@ -154,7 +158,7 @@ const ApplicationDetails = () => {
       {/* Application Details */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-800 mb-4">Application Details</h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="text-sm text-gray-500">Applicant</label>
@@ -163,24 +167,24 @@ const ApplicationDetails = () => {
               {application.student_name}
             </p>
           </div>
-          
+
           <div>
             <label className="text-sm text-gray-500">Scholarship Amount</label>
             <p className="font-medium text-gray-800 mt-1">
               ₹{application.scholarship_amount?.toLocaleString()}
             </p>
           </div>
-          
+
           <div>
             <label className="text-sm text-gray-500">GPA</label>
             <p className="font-medium text-gray-800 mt-1">{application.gpa || 'N/A'}</p>
           </div>
-          
+
           <div>
             <label className="text-sm text-gray-500">Submitted On</label>
             <p className="font-medium text-gray-800 flex items-center gap-2 mt-1">
               <FiCalendar className="text-gray-400" />
-              {application.submitted_at 
+              {application.submitted_at
                 ? new Date(application.submitted_at).toLocaleDateString()
                 : 'Not submitted'}
             </p>
@@ -210,7 +214,7 @@ const ApplicationDetails = () => {
       {application.documents?.length > 0 && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Uploaded Documents</h2>
-          
+
           <div className="space-y-3">
             {application.documents.map((doc) => (
               <div key={doc.id} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
@@ -262,77 +266,77 @@ const ApplicationDetails = () => {
       )}
 
       {/* Review Actions (Officer/Admin) */}
-      {['officer', 'admin'].includes(user?.role) && 
-       ['submitted', 'under_review', 'verified'].includes(application.status) && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Review Actions</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Review Comments
-              </label>
-              <textarea
-                value={statusComment}
-                onChange={(e) => setStatusComment(e.target.value)}
-                rows={3}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                placeholder="Add comments about your review..."
-              />
+      {['officer', 'admin'].includes(user?.role) &&
+        ['submitted', 'under_review', 'verified'].includes(application.status) && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Review Actions</h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Review Comments
+                </label>
+                <textarea
+                  value={statusComment}
+                  onChange={(e) => setStatusComment(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  placeholder="Add comments about your review..."
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                {application.status === 'submitted' && (
+                  <button
+                    onClick={() => updateStatus('under_review')}
+                    disabled={updating}
+                    className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl transition-all shadow-md disabled:opacity-50"
+                  >
+                    Mark Under Review
+                  </button>
+                )}
+
+                {['submitted', 'under_review'].includes(application.status) && (
+                  <button
+                    onClick={() => updateStatus('verified')}
+                    disabled={updating}
+                    className="px-4 py-2.5 bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-xl transition-all shadow-md disabled:opacity-50"
+                  >
+                    Verify Application
+                  </button>
+                )}
+
+                {['officer', 'admin'].includes(user?.role) && ['verified', 'under_review'].includes(application.status) && (
+                  <>
+                    <button
+                      onClick={() => updateStatus('approved')}
+                      disabled={updating}
+                      className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-semibold rounded-xl transition-all shadow-lg shadow-emerald-500/25 disabled:opacity-50"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => updateStatus('rejected')}
+                      disabled={updating}
+                      className="px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-all shadow-md disabled:opacity-50"
+                    >
+                      Reject
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              {application.status === 'submitted' && (
-                <button
-                  onClick={() => updateStatus('under_review')}
-                  disabled={updating}
-                  className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl transition-all shadow-md disabled:opacity-50"
-                >
-                  Mark Under Review
-                </button>
-              )}
-              
-              {['submitted', 'under_review'].includes(application.status) && (
-                <button
-                  onClick={() => updateStatus('verified')}
-                  disabled={updating}
-                  className="px-4 py-2.5 bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-xl transition-all shadow-md disabled:opacity-50"
-                >
-                  Verify Application
-                </button>
-              )}
-
-              {['officer', 'admin'].includes(user?.role) && ['verified', 'under_review'].includes(application.status) && (
-                <>
-                  <button
-                    onClick={() => updateStatus('approved')}
-                    disabled={updating}
-                    className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-semibold rounded-xl transition-all shadow-lg shadow-emerald-500/25 disabled:opacity-50"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => updateStatus('rejected')}
-                    disabled={updating}
-                    className="px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-all shadow-md disabled:opacity-50"
-                  >
-                    Reject
-                  </button>
-                </>
-              )}
-            </div>
+            {application.review_comments && (
+              <div className="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                <h3 className="font-medium text-gray-800 mb-2">Previous Comments</h3>
+                <pre className="text-sm text-gray-600 whitespace-pre-wrap">
+                  {application.review_comments}
+                </pre>
+              </div>
+            )}
           </div>
-
-          {application.review_comments && (
-            <div className="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-xl">
-              <h3 className="font-medium text-gray-800 mb-2">Previous Comments</h3>
-              <pre className="text-sm text-gray-600 whitespace-pre-wrap">
-                {application.review_comments}
-              </pre>
-            </div>
-          )}
-        </div>
-      )}
+        )}
     </div>
   );
 };

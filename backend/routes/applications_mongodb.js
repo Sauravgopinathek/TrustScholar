@@ -12,7 +12,7 @@ const { verifyToken } = require('../middleware/auth');
 const { requireRole } = require('../middleware/authorization');
 const { Application, Scholarship, Document, User } = require('../models');
 const { encryptAES, decryptAES, generateRSAKeyPair, hybridEncrypt, hybridDecrypt } = require('../utils/encryption');
-const { generateVerificationQR, generateVerifiedQR } = require('../utils/encoding');
+const { generateVerifiedCertificateData } = require('../utils/encoding');
 
 const generateApplicationNumber = () => {
   const year = new Date().getFullYear();
@@ -174,7 +174,6 @@ router.get('/:id',
           student_email: app.userId?.email,
           decrypted_data: decryptedData,
           review_comments: app.reviewNotes,
-          verified_qr_code: app.verifiedQrCode,
           verified_verification_code: app.verifiedVerificationCode,
           documents: documents.map((d) => ({
             id: d._id,
@@ -355,13 +354,13 @@ router.put('/:id/status',
         return res.status(404).json({ success: false, message: 'Application not found' });
       }
 
-      if (status === 'verified') {
-        const { qrCode, verificationCode, certificateText } = await generateVerifiedQR({
+      if (status === 'verified' || (status === 'approved' && !application.verifiedVerificationCode)) {
+        const { verificationCode, certificateText } = await generateVerifiedCertificateData({
           id: application._id,
-          application_number: application.applicationNumber,
+          applicationNumber: application.applicationNumber,
           student_id: application.userId
         });
-        application.verifiedQrCode = qrCode;
+
         application.verifiedVerificationCode = verificationCode;
         application.verifiedCertificateText = certificateText;
         application.verifiedAt = new Date();

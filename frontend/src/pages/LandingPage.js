@@ -21,8 +21,8 @@ const LandingPage = () => {
     },
     {
       icon: FiFileText,
-      title: 'QR Verification',
-      description: 'Instant verification of scholarship status through secure QR codes.'
+      title: 'Secure Verification',
+      description: 'Instant verification of scholarship status through unique secure codes.'
     }
   ];
 
@@ -70,17 +70,17 @@ const LandingPage = () => {
             <FiShield className="w-4 h-4" />
             NIST SP 800-63-2 Compliant Security
           </div>
-          
+
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
             Secure Your
             <span className="block bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent">
               Scholarship Journey
             </span>
           </h1>
-          
+
           <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10">
-            TrustScholar provides a secure, encrypted platform for scholarship applications 
-            with digital signatures, QR verification, and enterprise-grade security.
+            TrustScholar provides a secure, encrypted platform for scholarship applications
+            with digital signatures, code-based verification, and enterprise-grade security.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
@@ -158,7 +158,7 @@ const LandingPage = () => {
             {[
               { step: '01', title: 'Register & Verify', desc: 'Create your account and verify your email with secure OTP' },
               { step: '02', title: 'Apply Securely', desc: 'Submit your application with encrypted documents' },
-              { step: '03', title: 'Get Verified', desc: 'Receive your verified QR code after approval' }
+              { step: '03', title: 'Get Verified', desc: 'Receive your unique verification code after approval' }
             ].map((item, index) => (
               <div key={index} className="relative">
                 <div className="text-8xl font-bold text-white/5 absolute -top-4 -left-2">{item.step}</div>

@@ -105,7 +105,7 @@ app.get('/api/health', (req, res) => {
             encryption: 'AES-256 + RSA-2048 Hybrid',
             hashing: 'bcrypt + SHA-512',
             digitalSignatures: 'RSA-SHA512',
-            encoding: 'Base64 + QR Code'
+            encoding: 'Base64'
         }
     });
 });
@@ -171,7 +171,7 @@ const startServer = async () => {
 ║  ✅ Encryption: AES-256 + RSA-2048 (Hybrid)                  ║
 ║  ✅ Hashing: bcrypt (salt) + SHA-512                         ║
 ║  ✅ Digital Signatures: RSA-SHA512                           ║
-║  ✅ Encoding: Base64 + QR Codes                              ║
+║  ✅ Encoding: Base64                                        ║
 ╚══════════════════════════════════════════════════════════════╝
             `);
         });

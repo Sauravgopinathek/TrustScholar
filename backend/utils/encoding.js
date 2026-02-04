@@ -1,11 +1,3 @@
-/**
- * ============================================================
- * ENCODING UTILITIES
- * Implements: Base64 Encoding/Decoding, QR Code Generation
- * ============================================================
- */
-
-const QRCode = require('qrcode');
 const crypto = require('crypto');
 
 // ============================================================
@@ -39,64 +31,16 @@ const decodeBase64 = (encodedData) => {
 };
 
 // ============================================================
-// QR CODE GENERATION
+// VERIFICATION CODE GENERATION
 // ============================================================
 
 /**
- * Generate QR code as data URL (for embedding in HTML)
- * @param {string} data - Data to encode in QR
- * @param {object} options - QR code options
- * @returns {Promise<string>} - Data URL string
- */
-const generateQRCodeDataURL = async (data, options = {}) => {
-    try {
-        const defaultOptions = {
-            errorCorrectionLevel: 'M',
-            type: 'image/png',
-            width: 256,
-            margin: 2,
-            color: {
-                dark: '#000000',
-                light: '#ffffff'
-            },
-            ...options
-        };
-
-        return await QRCode.toDataURL(data, defaultOptions);
-    } catch (error) {
-        throw new Error('QR code generation failed: ' + error.message);
-    }
-};
-
-/**
- * Generate QR code as Buffer (for saving to file)
- * @param {string} data - Data to encode in QR
- * @param {object} options - QR code options
- * @returns {Promise<Buffer>} - Image buffer
- */
-const generateQRCodeBuffer = async (data, options = {}) => {
-    try {
-        const defaultOptions = {
-            errorCorrectionLevel: 'M',
-            type: 'png',
-            width: 256,
-            margin: 2,
-            ...options
-        };
-
-        return await QRCode.toBuffer(data, defaultOptions);
-    } catch (error) {
-        throw new Error('QR code generation failed: ' + error.message);
-    }
-};
-
-/**
- * Generate verification QR code for application
+ * Generate verification code string for application
  * Contains: Application ID, timestamp, verification hash
  * @param {object} applicationData - Application details
- * @returns {Promise<object>} - { qrCode, verificationCode }
+ * @returns {string} - Verification code
  */
-const generateVerificationQR = async (applicationData) => {
+const generateVerificationCodeString = (applicationData) => {
     try {
         // Create verification payload
         const timestamp = Date.now();
@@ -116,40 +60,18 @@ const generateVerificationQR = async (applicationData) => {
             .substring(0, 16);
 
         // Create verification code
-        const verificationCode = `SVS-${applicationData.application_number}-${verificationHash}`;
-
-        // Create QR code data (Base64-encoded payload)
-        const qrPayload = {
-            type: 'scholarship_verification',
-            code: verificationCode,
-            verify_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify/${verificationCode}`
-        };
-        const qrData = encodeBase64(JSON.stringify(qrPayload));
-
-        // Generate QR code
-        const qrCode = await generateQRCodeDataURL(qrData, {
-            width: 300,
-            color: {
-                dark: '#1a365d',
-                light: '#ffffff'
-            }
-        });
-
-        return {
-            qrCode,
-            verificationCode
-        };
+        return `SVS-${applicationData.applicationNumber}-${verificationHash}`;
     } catch (error) {
-        throw new Error('Verification QR generation failed: ' + error.message);
+        throw new Error('Verification code generation failed: ' + error.message);
     }
 };
 
 /**
- * Generate verified certificate QR code for application
+ * Generate verified certificate data for application
  * @param {object} applicationData - Application details
- * @returns {Promise<object>} - { qrCode, verificationCode }
+ * @returns {Promise<object>} - { verificationCode, certificateText }
  */
-const generateVerifiedQR = async (applicationData) => {
+const generateVerifiedCertificateData = async (applicationData) => {
     try {
         const timestamp = Date.now();
         const payload = {
@@ -166,51 +88,37 @@ const generateVerifiedQR = async (applicationData) => {
             .digest('hex')
             .substring(0, 16);
 
-        const verificationCode = `SVS-VERIFIED-${applicationData.application_number}-${verificationHash}`;
-        const verifyUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify/${verificationCode}`;
+        const verificationCode = `SVS-VERIFIED-${applicationData.applicationNumber}-${verificationHash}`;
 
-        const qrPayload = {
-            type: 'scholarship_verification_verified',
-            code: verificationCode,
-            verify_url: verifyUrl,
-            application_number: applicationData.application_number,
-            student_id: applicationData.student_id,
-            verified_at: new Date(timestamp).toISOString()
-        };
+        // Use environment variable for frontend URL or default
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const verifyUrl = `${frontendUrl}/verify/${verificationCode}`;
 
         const certificateText = [
             'Scholarship Verification Certificate',
-            `Application: ${applicationData.application_number}`,
+            `Application: ${applicationData.applicationNumber}`,
             `Student ID: ${applicationData.student_id}`,
             `Verified At: ${new Date(timestamp).toISOString()}`,
             `Verification Code: ${verificationCode}`,
             `Verify URL: ${verifyUrl}`
         ].join('\n');
 
-        const qrCode = await generateQRCodeDataURL(encodeBase64(JSON.stringify(qrPayload)), {
-            width: 300,
-            color: {
-                dark: '#1a365d',
-                light: '#ffffff'
-            }
-        });
-
-        return { qrCode, verificationCode, certificateText };
+        return { verificationCode, certificateText };
     } catch (error) {
-        throw new Error('Verified QR generation failed: ' + error.message);
+        throw new Error('Verified certificate generation failed: ' + error.message);
     }
 };
 
 /**
  * Decode and validate verification code
- * @param {string} verificationCode - Code from QR or manual entry
+ * @param {string} verificationCode - Code from manual entry
  * @returns {object} - Parsed verification data
  */
 const parseVerificationCode = (verificationCode) => {
     try {
         // Format: SVS-APP2025-XXXX-HASH
         const parts = verificationCode.split('-');
-        
+
         if (parts[0] !== 'SVS' || parts.length < 3) {
             throw new Error('Invalid verification code format');
         }
@@ -233,10 +141,8 @@ module.exports = {
     // Base64
     encodeBase64,
     decodeBase64,
-    // QR Code
-    generateQRCodeDataURL,
-    generateQRCodeBuffer,
-    generateVerificationQR,
-    generateVerifiedQR,
+    // Verification
+    generateVerificationCodeString,
+    generateVerifiedCertificateData,
     parseVerificationCode
 };
