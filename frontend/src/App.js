@@ -20,7 +20,7 @@ import AdminUsers from './pages/AdminUsers';
 import AdminScholarships from './pages/AdminScholarships';
 import AuditLogs from './pages/AuditLogs';
 import ReviewApplications from './pages/ReviewApplications';
-import ScanVerification from './pages/ScanVerification';
+import PublicVerification from './pages/PublicVerification';
 
 // Layout
 import Layout from './components/Layout';
@@ -71,6 +71,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify/:code" element={<VerifyApplication />} />
+          <Route path="/verify-certificate" element={<PublicVerification />} />
 
           {/* Protected Routes */}
           <Route path="/app" element={
@@ -85,18 +86,14 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="scholarships" element={<Scholarships />} />
-            
+
             {/* Student Routes */}
             <Route path="my-applications" element={
               <ProtectedRoute allowedRoles={['student']}>
                 <MyApplications />
               </ProtectedRoute>
             } />
-            <Route path="scan-qr" element={
-              <ProtectedRoute allowedRoles={['student']}>
-                <ScanVerification />
-              </ProtectedRoute>
-            } />
+
             <Route path="apply/:scholarshipId" element={
               <ProtectedRoute allowedRoles={['student']}>
                 <ApplicationForm />
