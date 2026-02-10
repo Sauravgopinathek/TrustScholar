@@ -16,7 +16,7 @@
  * └─────────────┴────────────────────┴────────────────────┴────────────────────┘
  */
 
-const { AuditLog } = require('../models');
+const { AuditLog, Application, Document } = require('../models');
 
 // ============================================================
 // ROLE-BASED ACCESS CONTROL (RBAC)
@@ -38,7 +38,7 @@ const requireRole = (...allowedRoles) => {
         if (!allowedRoles.includes(req.user.role)) {
             // Log unauthorized access attempt
             logAccessAttempt(req, 'Unauthorized Access Attempt', 'failure');
-            
+
             return res.status(403).json({
                 success: false,
                 message: 'Access denied. Insufficient privileges.',
@@ -116,7 +116,7 @@ const checkPermission = (resource, action) => {
             if (!isAllowed) {
                 // Log denied access
                 await logAccessAttempt(req, `Access Denied: ${readableAction}`, 'failure');
-                
+
                 return res.status(403).json({
                     success: false,
                     message: `Access denied. Cannot ${action} ${resource}.`
@@ -125,7 +125,7 @@ const checkPermission = (resource, action) => {
 
             // Log successful access
             await logAccessAttempt(req, readableAction, 'success');
-            
+
             next();
         } catch (error) {
             console.error('Permission check error:', error);
@@ -159,25 +159,20 @@ const checkOwnership = (resourceType, paramName = 'id') => {
 
             switch (resourceType) {
                 case 'application':
-                    const [apps] = await pool.query(
-                        'SELECT student_id FROM applications WHERE id = ?',
-                        [resourceId]
-                    );
-                    isOwner = apps.length > 0 && apps[0].student_id === req.user.id;
+                    const app = await Application.findById(resourceId);
+                    // Check if application exists and belongs to user
+                    isOwner = app && app.userId.toString() === req.user.id.toString();
                     break;
 
                 case 'document':
-                    const [docs] = await pool.query(`
-                        SELECT a.student_id 
-                        FROM documents d
-                        JOIN applications a ON d.application_id = a.id
-                        WHERE d.id = ?
-                    `, [resourceId]);
-                    isOwner = docs.length > 0 && docs[0].student_id === req.user.id;
+                    const doc = await Document.findById(resourceId);
+                    // Document has userId directly on it (as seen in schema)
+                    isOwner = doc && doc.userId.toString() === req.user.id.toString();
                     break;
 
                 case 'user':
-                    isOwner = parseInt(resourceId) === req.user.id;
+                    // Compare IDs directly (User ID in param vs Logged in User ID)
+                    isOwner = resourceId.toString() === req.user.id.toString();
                     break;
 
                 default:
@@ -187,7 +182,7 @@ const checkOwnership = (resourceType, paramName = 'id') => {
             if (!isOwner) {
                 const resourceNames = { application: 'Application', document: 'Document', user: 'User' };
                 await logAccessAttempt(req, `Access Denied: ${resourceNames[resourceType] || resourceType} Ownership`, 'failure');
-                
+
                 return res.status(403).json({
                     success: false,
                     message: 'Access denied. You can only access your own resources.'
@@ -215,7 +210,7 @@ const checkOwnership = (resourceType, paramName = 'id') => {
 const getReadableAction = (method, url) => {
     // Remove query parameters
     const cleanUrl = url.split('?')[0];
-    
+
     // Define action mappings for common routes
     const actionMappings = {
         // Auth routes
@@ -229,20 +224,20 @@ const getReadableAction = (method, url) => {
         'POST /api/auth/forgot-password': 'Password Reset Request',
         'POST /api/auth/reset-password': 'Password Reset',
         'GET /api/auth/me': 'View Profile',
-        
+
         // Scholarship routes
         'GET /api/scholarships': 'View Scholarships',
         'POST /api/scholarships': 'Create Scholarship',
-        
+
         // Application routes
         'GET /api/applications': 'View Applications',
         'POST /api/applications': 'Submit Application',
         'GET /api/applications/my': 'View My Applications',
-        
+
         // Document routes
         'GET /api/documents': 'View Documents',
         'POST /api/documents': 'Upload Document',
-        
+
         // User management routes
         'GET /api/users': 'View Users',
         'POST /api/users': 'Create User',
@@ -260,18 +255,18 @@ const getReadableAction = (method, url) => {
         { pattern: /^GET \/api\/scholarships\/[^/]+$/, action: 'View Scholarship Details' },
         { pattern: /^PUT \/api\/scholarships\/[^/]+$/, action: 'Update Scholarship' },
         { pattern: /^DELETE \/api\/scholarships\/[^/]+$/, action: 'Delete Scholarship' },
-        
+
         { pattern: /^GET \/api\/applications\/[^/]+$/, action: 'View Application Details' },
         { pattern: /^PUT \/api\/applications\/[^/]+$/, action: 'Update Application' },
         { pattern: /^DELETE \/api\/applications\/[^/]+$/, action: 'Delete Application' },
         { pattern: /^PUT \/api\/applications\/[^/]+\/status$/, action: 'Update Application Status' },
         { pattern: /^GET \/api\/applications\/[^/]+\/certificate$/, action: 'Download Certificate' },
         { pattern: /^GET \/api\/applications\/verify\/[^/]+$/, action: 'Verify Application' },
-        
+
         { pattern: /^GET \/api\/documents\/[^/]+$/, action: 'Download Document' },
         { pattern: /^GET \/api\/documents\/[^/]+\/verify$/, action: 'Verify Document' },
         { pattern: /^DELETE \/api\/documents\/[^/]+$/, action: 'Delete Document' },
-        
+
         { pattern: /^GET \/api\/users\/[^/]+$/, action: 'View User Details' },
         { pattern: /^PUT \/api\/users\/[^/]+$/, action: 'Update User' },
         { pattern: /^DELETE \/api\/users\/[^/]+$/, action: 'Delete User' },
@@ -298,7 +293,7 @@ const getReadableAction = (method, url) => {
     const urlParts = cleanUrl.replace('/api/', '').split('/').filter(Boolean);
     const resource = urlParts[0] || 'Resource';
     const formattedResource = resource.charAt(0).toUpperCase() + resource.slice(1);
-    
+
     return `${methodNames[method] || method} ${formattedResource}`;
 };
 
@@ -326,21 +321,21 @@ const logAccessAttempt = async (req, action, status) => {
 const auditLog = async (req, res, next) => {
     // Store original end function
     const originalEnd = res.end;
-    
-    res.end = function(chunk, encoding) {
+
+    res.end = function (chunk, encoding) {
         // Generate readable action description
         const readableAction = getReadableAction(req.method, req.originalUrl);
-        
+
         // Log after response
         logAccessAttempt(
             req,
             readableAction,
             res.statusCode < 400 ? 'success' : 'failure'
         ).catch(console.error);
-        
+
         originalEnd.call(this, chunk, encoding);
     };
-    
+
     next();
 };
 

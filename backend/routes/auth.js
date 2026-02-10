@@ -29,7 +29,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-const WEBSITE_NAME = process.env.WEBSITE_NAME || 'Scholarship Verification System';
+const WEBSITE_NAME = process.env.WEBSITE_NAME || 'TrustScholar';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
 
 // In-memory OTP storage (for development - use Redis in production)
@@ -51,9 +51,9 @@ const generateOTP = () => {
  */
 const sendOTPEmail = async (email, otp, purpose) => {
     const subjects = {
-        login: 'Login Verification Code - Scholarship System',
-        registration: 'Email Verification - Scholarship System',
-        password_reset: 'Password Reset Code - Scholarship System'
+        login: 'Login Verification Code - TrustScholar',
+        registration: 'Email Verification - TrustScholar',
+        password_reset: 'Password Reset Code - TrustScholar'
     };
 
     const mailOptions = {
@@ -62,7 +62,7 @@ const sendOTPEmail = async (email, otp, purpose) => {
         subject: subjects[purpose] || 'Verification Code',
         html: `
             <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px;">
-                <h2 style="color: #1a365d;">Scholarship Verification System</h2>
+                <h2 style="color: #1a365d;">TrustScholar</h2>
                 <p>Your verification code is:</p>
                 <h1 style="color: #2c5282; letter-spacing: 5px; font-size: 36px;">${otp}</h1>
                 <p>This code will expire in <strong>5 minutes</strong>.</p>
@@ -141,14 +141,14 @@ const sendAdminRegistrationEmail = async (adminEmail, userEmail, role) => {
 const storeOTP = (email, otp, purpose) => {
     const hashedOTP = crypto.createHash('sha512').update(otp).digest('hex');
     const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
-    
+
     otpStore.set(email, {
         otp: hashedOTP,
         purpose,
         expiresAt,
         attempts: 0
     });
-    
+
     // Auto-cleanup after expiration
     setTimeout(() => otpStore.delete(email), 5 * 60 * 1000);
 };
@@ -158,28 +158,28 @@ const storeOTP = (email, otp, purpose) => {
  */
 const verifyOTP = (email, otp) => {
     const stored = otpStore.get(email);
-    
+
     if (!stored) {
         return { valid: false, message: 'OTP expired or not found' };
     }
-    
+
     if (Date.now() > stored.expiresAt) {
         otpStore.delete(email);
         return { valid: false, message: 'OTP expired' };
     }
-    
+
     if (stored.attempts >= 3) {
         otpStore.delete(email);
         return { valid: false, message: 'Too many attempts' };
     }
-    
+
     const hashedInput = crypto.createHash('sha512').update(otp).digest('hex');
-    
+
     if (hashedInput !== stored.otp) {
         stored.attempts++;
         return { valid: false, message: 'Invalid OTP' };
     }
-    
+
     otpStore.delete(email);
     return { valid: true };
 };
@@ -275,7 +275,7 @@ router.post('/verify-otp', async (req, res) => {
         const { email, otp } = req.body;
 
         const verification = verifyOTP(email, otp);
-        
+
         if (!verification.valid) {
             return res.status(400).json({
                 success: false,
@@ -293,10 +293,10 @@ router.post('/verify-otp', async (req, res) => {
 
         // Generate JWT token
         const token = jwt.sign(
-            { 
-                userId: user._id, 
+            {
+                userId: user._id,
                 email: user.email,
-                role: user.role 
+                role: user.role
             },
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
@@ -452,7 +452,7 @@ router.post('/resend-otp', async (req, res) => {
 router.get('/me', verifyToken, async (req, res) => {
     try {
         const user = await User.findById(req.user.userId).select('-password');
-        
+
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -491,7 +491,7 @@ router.post('/verify-email', async (req, res) => {
         const { email, otp } = req.body;
 
         const verification = verifyOTP(email, otp);
-        
+
         if (!verification.valid) {
             return res.status(400).json({
                 success: false,
@@ -509,10 +509,10 @@ router.post('/verify-email', async (req, res) => {
 
         // Generate JWT token
         const token = jwt.sign(
-            { 
-                userId: user._id, 
+            {
+                userId: user._id,
                 email: user.email,
-                role: user.role 
+                role: user.role
             },
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
@@ -554,7 +554,7 @@ router.post('/verify-mfa', async (req, res) => {
         const email = tempToken; // Simplified for demo
 
         const verification = verifyOTP(email, otp);
-        
+
         if (!verification.valid) {
             return res.status(400).json({
                 success: false,
@@ -573,10 +573,10 @@ router.post('/verify-mfa', async (req, res) => {
 
         // Generate JWT token
         const token = jwt.sign(
-            { 
-                userId: user._id, 
+            {
+                userId: user._id,
                 email: user.email,
-                role: user.role 
+                role: user.role
             },
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
@@ -633,53 +633,53 @@ router.post('/logout', verifyToken, async (req, res) => {
 router.post('/forgot-password',
     body('email').isEmail().normalizeEmail(),
     async (req, res) => {
-    try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({
-                success: false,
-                errors: errors.array()
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({
+                    success: false,
+                    errors: errors.array()
+                });
+            }
+
+            const { email } = req.body;
+
+            // Check if user exists
+            const user = await User.findOne({ email });
+            if (!user) {
+                // Don't reveal if user exists or not for security
+                return res.json({
+                    success: true,
+                    message: 'If an account with that email exists, a reset code has been sent.'
+                });
+            }
+
+            // Generate OTP
+            const otp = generateOTP();
+
+            // Store OTP with expiry (5 minutes)
+            otpStore.set(`reset_${email}`, {
+                otp,
+                expiresAt: Date.now() + 5 * 60 * 1000,
+                attempts: 0
             });
-        }
 
-        const { email } = req.body;
+            // Send reset email
+            await sendOTPEmail(email, otp, 'password_reset');
 
-        // Check if user exists
-        const user = await User.findOne({ email });
-        if (!user) {
-            // Don't reveal if user exists or not for security
-            return res.json({
+            res.json({
                 success: true,
                 message: 'If an account with that email exists, a reset code has been sent.'
             });
+
+        } catch (error) {
+            console.error('Forgot password error:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to process request'
+            });
         }
-
-        // Generate OTP
-        const otp = generateOTP();
-        
-        // Store OTP with expiry (5 minutes)
-        otpStore.set(`reset_${email}`, {
-            otp,
-            expiresAt: Date.now() + 5 * 60 * 1000,
-            attempts: 0
-        });
-
-        // Send reset email
-        await sendOTPEmail(email, otp, 'password_reset');
-
-        res.json({
-            success: true,
-            message: 'If an account with that email exists, a reset code has been sent.'
-        });
-
-    } catch (error) {
-        console.error('Forgot password error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to process request'
-        });
-    }
-});
+    });
 
 /**
  * POST /api/auth/reset-password
@@ -692,80 +692,80 @@ router.post('/reset-password',
         .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/)
         .withMessage('Password must contain uppercase, lowercase, number and special character'),
     async (req, res) => {
-    try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({
-                success: false,
-                errors: errors.array()
-            });
-        }
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({
+                    success: false,
+                    errors: errors.array()
+                });
+            }
 
-        const { email, otp, newPassword } = req.body;
+            const { email, otp, newPassword } = req.body;
 
-        // Verify OTP
-        const storedData = otpStore.get(`reset_${email}`);
-        
-        if (!storedData) {
-            return res.status(400).json({
-                success: false,
-                message: 'No reset request found. Please request a new code.'
-            });
-        }
+            // Verify OTP
+            const storedData = otpStore.get(`reset_${email}`);
 
-        if (storedData.attempts >= 3) {
+            if (!storedData) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'No reset request found. Please request a new code.'
+                });
+            }
+
+            if (storedData.attempts >= 3) {
+                otpStore.delete(`reset_${email}`);
+                return res.status(400).json({
+                    success: false,
+                    message: 'Too many attempts. Please request a new code.'
+                });
+            }
+
+            if (Date.now() > storedData.expiresAt) {
+                otpStore.delete(`reset_${email}`);
+                return res.status(400).json({
+                    success: false,
+                    message: 'Code has expired. Please request a new code.'
+                });
+            }
+
+            if (storedData.otp !== otp) {
+                storedData.attempts += 1;
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid code. Please try again.'
+                });
+            }
+
+            // Find user and update password
+            const user = await User.findOne({ email });
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'User not found'
+                });
+            }
+
+            // Hash new password
+            const hashedPassword = await bcrypt.hash(newPassword, 12);
+            user.password = hashedPassword;
+            await user.save();
+
+            // Clear OTP
             otpStore.delete(`reset_${email}`);
-            return res.status(400).json({
+
+            res.json({
+                success: true,
+                message: 'Password reset successful. You can now login with your new password.'
+            });
+
+        } catch (error) {
+            console.error('Reset password error:', error);
+            res.status(500).json({
                 success: false,
-                message: 'Too many attempts. Please request a new code.'
+                message: 'Failed to reset password'
             });
         }
-
-        if (Date.now() > storedData.expiresAt) {
-            otpStore.delete(`reset_${email}`);
-            return res.status(400).json({
-                success: false,
-                message: 'Code has expired. Please request a new code.'
-            });
-        }
-
-        if (storedData.otp !== otp) {
-            storedData.attempts += 1;
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid code. Please try again.'
-            });
-        }
-
-        // Find user and update password
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
-        }
-
-        // Hash new password
-        const hashedPassword = await bcrypt.hash(newPassword, 12);
-        user.password = hashedPassword;
-        await user.save();
-
-        // Clear OTP
-        otpStore.delete(`reset_${email}`);
-
-        res.json({
-            success: true,
-            message: 'Password reset successful. You can now login with your new password.'
-        });
-
-    } catch (error) {
-        console.error('Reset password error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to reset password'
-        });
-    }
-});
+    });
 
 module.exports = router;
