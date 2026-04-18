@@ -4,6 +4,7 @@ emoji: 🎓
 colorFrom: blue
 colorTo: purple
 sdk: docker
+sdk_version: "1.0"
 pinned: false
 ---
 
