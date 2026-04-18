@@ -57,9 +57,11 @@ const RoleRedirect = () => {
 };
 
 function App() {
+  const basename = process.env.PUBLIC_URL || '/';
+
   return (
     <AuthProvider>
-      <Router>
+      <Router basename={basename}>
         <Toaster position="top-right" />
         <Routes>
           {/* Public Routes */}

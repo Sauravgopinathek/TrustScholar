@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const APP_BASE = process.env.PUBLIC_URL || '';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -28,7 +29,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      window.location.href = `${APP_BASE}/login`;
     }
     return Promise.reject(error);
   }

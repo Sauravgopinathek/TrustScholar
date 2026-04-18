@@ -7,6 +7,8 @@ import {
   FiLogOut, FiShield, FiMenu, FiX 
 } from 'react-icons/fi';
 
+const APP_BASE = process.env.PUBLIC_URL || '';
+
 const Layout = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -40,7 +42,7 @@ const Layout = () => {
     try {
       await usersAPI.deleteMe();
       await logout();
-      window.location.href = '/login';
+      window.location.href = `${APP_BASE}/login`;
     } catch (error) {
       window.alert(error.response?.data?.message || 'Failed to delete account');
     }
