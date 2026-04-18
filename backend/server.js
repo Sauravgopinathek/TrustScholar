@@ -37,6 +37,10 @@ const userRoutes = require('./routes/users');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust first proxy (required on hosted platforms like Hugging Face Spaces)
+// so rate limiting can use the real client IP from X-Forwarded-For.
+app.set('trust proxy', 1);
+
 // ============================================================
 // SECURITY MIDDLEWARE
 // ============================================================
