@@ -1,6 +1,6 @@
 ---
 title: TrustScholar Backend
-emoji: ":graduation_cap:"
+emoji: 🎓
 colorFrom: blue
 colorTo: purple
 sdk: docker
