@@ -8,6 +8,7 @@ import {
 } from 'react-icons/fi';
 
 const APP_BASE = process.env.PUBLIC_URL || '';
+const LOGIN_ROUTE = `${APP_BASE}/#/login`;
 
 const Layout = () => {
   const { user, logout } = useAuth();
@@ -42,7 +43,7 @@ const Layout = () => {
     try {
       await usersAPI.deleteMe();
       await logout();
-      window.location.href = `${APP_BASE}/login`;
+      window.location.href = LOGIN_ROUTE;
     } catch (error) {
       window.alert(error.response?.data?.message || 'Failed to delete account');
     }

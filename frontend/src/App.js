@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -57,11 +57,9 @@ const RoleRedirect = () => {
 };
 
 function App() {
-  const basename = process.env.PUBLIC_URL || '/';
-
   return (
     <AuthProvider>
-      <Router basename={basename}>
+      <Router>
         <Toaster position="top-right" />
         <Routes>
           {/* Public Routes */}
