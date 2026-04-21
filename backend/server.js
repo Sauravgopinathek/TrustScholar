@@ -17,6 +17,7 @@
  */
 
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -112,6 +113,14 @@ app.get('/api/health', (req, res) => {
             encoding: 'Base64'
         }
     });
+});
+
+// Serve static frontend files
+app.use(express.static(path.join(__dirname, '../frontend/build')));
+
+// Catch-all route to serve the frontend app (ignoring /api routes)
+app.get(/^(?!\/api).*/, (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
 });
 
 // ============================================================

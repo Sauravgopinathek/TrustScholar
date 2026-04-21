@@ -1,20 +1,22 @@
-FROM node:18-alpine
-
-# Set working directory
-WORKDIR /app
-
-# Copy backend package files
-COPY backend/package*.json ./
-
-# Install dependencies
+# Build frontend
+FROM node:18-alpine AS frontend-builder
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
 RUN npm install
+COPY frontend/ ./
+RUN npm run build
 
-# Copy all backend files
+# Build backend and serve
+FROM node:18-alpine
+WORKDIR /app
+COPY backend/package*.json ./backend/
+WORKDIR /app/backend
+RUN npm install --production
 COPY backend/ ./
+WORKDIR /app
+COPY --from=frontend-builder /app/frontend/build ./frontend/build
 
-# Expose port (Hugging Face uses 7860)
 ENV PORT=7860
 EXPOSE 7860
 
-# Start the server
-CMD ["npm", "start"]
+CMD ["node", "backend/server.js"]
